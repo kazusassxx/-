@@ -22,12 +22,12 @@ cd basic
 | **轻量**（文案/样式/单文件 <30行） | 意图确认 → 外科手术修改 → 验证 → Commit | 分钟级 |
 | **重度**（新功能/模块变更/跨层改动） | Grill → OpenSpec → TDD → Archive | 小时级 |
 
-### 重度流程 4 卡口
+### 重度流程 4 卡口（Subagent 自动调度）
 
-1. **Grill-me** — 高压逼问所有隐含假设与边缘场景
-2. **OpenSpec** — 输出 `propose.md` + specs + design + tasks
-3. **Superpowers** — RED-GREEN-REFACTOR TDD 循环驱动实施
-4. **Archive** — 归档 completed proposal
+1. **Grill-me** — `@requirement-griller` 高压逼问所有隐含假设与边缘场景
+2. **OpenSpec** — `@spec-writer` 输出 `propose.md` + specs + design + tasks
+3. **Superpowers** — `@tdd-implementer` RED-GREEN-REFACTOR TDD 循环驱动实施
+4. **Code Review** — `@code-reviewer` 基于 code-review-graph 图谱审查变更影响面
 
 详见 [DEVELOPMENT_SOP.md](DEVELOPMENT_SOP.md)。
 
@@ -36,9 +36,11 @@ cd basic
 | 工具 | 类型 | 用途 |
 |------|------|------|
 | AGENTS.md | Rule | 全局纪律、分流路由、4卡口流程 |
-| grill-me | Skill | 需求拷问卡口 |
-| openspec | Skill | 领域规格定义 |
-| superpowers | Skill | TDD 驱动与归档 |
+| requirement-griller | Subagent | 需求拷问卡口 |
+| spec-writer | Subagent | 领域规格定义 |
+| tdd-implementer | Subagent | TDD 驱动实施 |
+| code-reviewer | Subagent | 代码审查（图谱驱动） |
+| grill-me / openspec / superpowers | Skill | 各卡口操作手册 |
 | code-review-graph | MCP | 代码符号图谱与 blast radius 分析 |
 
 ## 项目结构
@@ -47,6 +49,12 @@ cd basic
 .
 ├── .trae/
 │   ├── rules/AGENTS.md          # Agent 全局行为规范
+│   ├── agents/                  # 可复用 Subagent
+│   │   ├── requirement-griller.md
+│   │   ├── spec-writer.md
+│   │   ├── tdd-implementer.md
+│   │   └── code-reviewer.md
+│   ├── mcp.json                 # 项目级 MCP 配置
 │   └── skills/                  # Skill 定义
 │       ├── grill-me/SKILL.md
 │       ├── openspec/SKILL.md
