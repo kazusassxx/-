@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "code-review-graph": {
+      "command": "code-review-graph",
+      "args": ["mcp", "--repo", ".", "--auto-watch"]
+    }
+  }
+}
