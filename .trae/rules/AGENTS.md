@@ -116,6 +116,12 @@ Grill-me 拷问 → OpenSpec 规格定义 → Superpowers TDD 驱动 → 归档�
 ├── .trae/
 │   ├── rules/
 │   │   └── AGENTS.md          # 本文档
+│   ├── agents/                # 可复用 Subagent（SOLO Agent 自动调度）
+│   │   ├── requirement-griller.md  # 需求拷问（Grill-me）
+│   │   ├── spec-writer.md          # 领域规格定义（OpenSpec）
+│   │   ├── tdd-implementer.md      # TDD 驱动实施（Superpowers）
+│   │   └── code-reviewer.md        # 代码审查（code-review-graph）
+│   ├── mcp.json               # 项目级 MCP 配置
 │   └── skills/
 │       ├── grill-me/
 │       │   └── SKILL.md       # 需求拷问 Skill
@@ -129,6 +135,22 @@ Grill-me 拷问 → OpenSpec 规格定义 → Superpowers TDD 驱动 → 归档�
 ├── README.md                  # 项目说明
 └── DEVELOPMENT_SOP.md         # 团队开发 SOP
 ```
+
+## G2. Subagent 调度规则
+
+SOLO Agent 按 description 自动匹配调用 Subagent。重度流程的 4 卡口与 Subagent 对应关系：
+
+| Subagent | 职责 |
+|----------|------|
+| `fullstack-engineer` | 主 Agent：轻重分流 + 编排全流程（任务入口） |
+| `requirement-griller` | 阶段 1: Grill-me 拷问 |
+| `spec-writer` | 阶段 2: OpenSpec 规格定义 |
+| `tdd-implementer` | 阶段 3: TDD 驱动实施 |
+| `code-reviewer` | 阶段 4: 代码审查 |
+
+调用链：`fullstack-engineer` 判定轻重 → 轻量直接执行 → 重度依次委派 `requirement-griller` → `spec-writer` → `tdd-implementer` → `code-reviewer`。
+
+用户也可手动 `@agent-name` 显式调用。
 
 ## H. 检查清单（每次任务前自检）
 
