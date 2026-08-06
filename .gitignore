@@ -9,3 +9,20 @@ dist/
 build/
 .env
 .code-review-graph/
+
+# meeting-transcriber：本地数据（含敏感信息，绝不入库）
+# 用户数据目录：~/.meeting-transcriber/（config.json / speakers.json / 录音 / 报告）
+.meeting-transcriber/
+# 模型文件不入库（由 scripts/download_models.py 获取）
+models/
+*.onnx
+*.onnx.tar.bz2
+# 录音与转写输出
+record_*.wav
+transcript_*.md
+# 打包产物
+*.spec
+*.zip
+# 测试临时数据
+.pytest_cache/
+.pytest_tmp/

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meeting-transcriber"
+version = "0.1.0"
+description = "纯离线双轨会议转写桌面工具（声纹分角色 + SenseVoice 转写 + Markdown 报告）"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"  # PEP 639：SPDX 表达式写法
+dependencies = [
+    "sherpa-onnx==1.13.4",
+    "PySide6==6.11.1",
+    "sounddevice>=0.5.0",
+    "PyAudioWPatch>=0.2.12",
+    "soundfile>=0.14.0",
+    "numpy>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+meeting-transcriber = "meeting_transcriber.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
