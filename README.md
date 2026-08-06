@@ -47,25 +47,68 @@ cd basic
 
 ```
 .
-├── .trae/
-│   ├── rules/AGENTS.md          # Agent 全局行为规范
-│   ├── agents/                  # 可复用 Subagent
+├── .trae/                          # Agent 协作配置
+│   ├── rules/AGENTS.md             # Agent 全局行为规范
+│   ├── agents/                     # 可复用 Subagent（重度流程 4 卡口）
 │   │   ├── requirement-griller.md
 │   │   ├── spec-writer.md
 │   │   ├── tdd-implementer.md
 │   │   └── code-reviewer.md
-│   ├── mcp.json                 # 项目级 MCP 配置
-│   └── skills/                  # Skill 定义
-│       ├── grill-me/SKILL.md
-│       ├── openspec/SKILL.md
-│       └── superpowers/SKILL.md
+│   ├── skills/                     # Skill 定义
+│   │   ├── grill-me/SKILL.md
+│   │   ├── openspec/SKILL.md
+│   │   └── superpowers/SKILL.md
+│   └── mcp.json                    # 项目级 MCP 配置
 ├── openspec/
-│   └── proposals/
-│       └── archive/             # 已完成并归档的提案
-├── src/                         # 源代码
-├── README.md
-└── DEVELOPMENT_SOP.md
+│   └── proposals/archive/          # 已完成并归档的规格提案
+├── scripts/                        # 工具脚本
+│   ├── download_models.py          # 模型下载（SenseVoice / eres2net / Pyannote）
+│   └── build_windows.ps1           # Windows 打包（PyInstaller onedir + 模型内置）
+├── src/meeting_transcriber/        # 产品源码
+│   ├── audio/                      # 音频层
+│   │   ├── capture.py              #   双轨采集（mic + WASAPI loopback）+ 波形包络
+│   │   ├── devices.py              #   设备枚举与消歧（多 hostapi 同名）
+│   │   ├── resample.py             #   重采样到 16kHz 单声道
+│   │   ├── mix.py                  #   双轨混音（系统音衰减）
+│   │   └── import_audio.py         #   外部音频解码
+│   ├── pipeline/                   # 转写管线
+│   │   ├── vad.py                  #   能量 VAD 断句
+│   │   ├── diarize.py              #   Pyannote 说话人分割
+│   │   ├── embedding.py            #   512 维声纹提取
+│   │   ├── asr.py                  #   SenseVoice 离线识别
+│   │   ├── merge.py                #   短段合并 / 长段切分
+│   │   ├── segment.py              #   段落模型
+│   │   └── pipeline.py             #   编排：VAD→聚类→ASR→声纹匹配
+│   ├── report/                     # 报告输出
+│   │   ├── formatter.py            #   分角色 Markdown（单一真相源）
+│   │   ├── corrections.py          #   名词纠错映射
+│   │   └── atomicio.py             #   原子写
+│   ├── storage/                    # 持久化
+│   │   ├── config.py               #   用户配置（原子写）
+│   │   └── speakers.py             #   声纹库（版本化 / 损坏容错）
+│   ├── gui/                        # 桌面 GUI（PySide6）
+│   │   ├── app.py                  #   应用入口
+│   │   ├── state_machine.py        #   四状态机
+│   │   ├── workers.py              #   录音 / 转写工作线程
+│   │   └── windows/                #   主窗 / 小窗 / 波形 / 设置 / 姓名拦截
+│   ├── cli.py                      # 命令行入口（--offline / --list-devices）
+│   └── paths.py                    # 数据路径约定
+├── tests/                          # 150 项测试（合成数据 + mock，不触真实数据）
+├── pyproject.toml                  # 项目元数据与依赖（PEP 621）
+├── LICENSE                         # MIT 开源协议
+├── README.md                       # 本文件
+├── 产品介绍.md                      # 产品介绍文档
+├── 离线会议转写工具开发任务说明书.md   # 开发任务规格书
+└── DEVELOPMENT_SOP.md              # 开发流程规范
 ```
+
+## 文档索引
+
+| 文档 | 说明 |
+|------|------|
+| [产品介绍.md](产品介绍.md) | 产品定位、功能特性、架构与隐私承诺（面向使用者） |
+| [离线会议转写工具开发任务说明书.md](离线会议转写工具开发任务说明书.md) | 完整需求规格 A~H 与验收标准（面向开发者） |
+| [DEVELOPMENT_SOP.md](DEVELOPMENT_SOP.md) | Agent 开发流程操作规范 |
 
 ## Meeting Transcriber（离线会议转写工具）
 
