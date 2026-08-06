@@ -41,6 +41,13 @@ ASR_LANG_LABELS = [
     ("ko", "한국어"),
 ]
 
+# ASR 引擎（asr_engine）；auto = 模型目录自动识别（zipformer 优先）
+ASR_ENGINE_LABELS = [
+    ("auto", "自动识别"),
+    ("sensevoice", "SenseVoice（多语言）"),
+    ("zipformer", "Zipformer 中英双语（推荐）"),
+]
+
 # 推理线程数范围 1..8（任务书 B-5）；推荐值 = CPU 核数/2，上限 4
 THREADS_MIN = 1
 THREADS_MAX = 8
@@ -110,10 +117,31 @@ class SettingsDialog(QDialog):
         )
         self._asr_lang_tip.setStyleSheet("color: gray;")
 
+        self._asr_engine = QComboBox()
+        for code, label in ASR_ENGINE_LABELS:
+            self._asr_engine.addItem(label, code)
+        idx = self._asr_engine.findData(str(self._cfg.get("asr_engine") or "auto"))
+        self._asr_engine.setCurrentIndex(max(idx, 0))
+        self._asr_engine_tip = QLabel(
+            self.tr("Zipformer = 中英混杂专用（需下载双语模型）；SenseVoice = 多语言通用")
+        )
+        self._asr_engine_tip.setStyleSheet("color: gray;")
+
+        self._hotwords = QLineEdit(str(self._cfg.get("hotwords") or ""))
+        self._hotwords_tip = QLabel(
+            self.tr("热词（仅 Zipformer 引擎生效）：英文/专名用逗号分隔，如 API,Transformer,张三丰")
+        )
+        self._hotwords_tip.setWordWrap(True)
+        self._hotwords_tip.setStyleSheet("color: gray;")
+
         form.addRow(self.tr("姓名"), self._name)
         form.addRow(self.tr("界面语言"), self._lang)
         form.addRow(self.tr("识别语言"), self._asr_lang)
         form.addRow("", self._asr_lang_tip)
+        form.addRow(self.tr("ASR 引擎"), self._asr_engine)
+        form.addRow("", self._asr_engine_tip)
+        form.addRow(self.tr("热词"), self._hotwords)
+        form.addRow("", self._hotwords_tip)
         row = QHBoxLayout()
         row.addWidget(self._out_dir, 1)
         row.addWidget(browse)
@@ -261,6 +289,8 @@ class SettingsDialog(QDialog):
         self._cfg["output_dir"] = self._out_dir.text().strip()
         self._cfg["num_threads"] = self._threads.value()
         self._cfg["asr_lang"] = self._asr_lang.currentData()
+        self._cfg["asr_engine"] = self._asr_engine.currentData()
+        self._cfg["hotwords"] = self._hotwords.text().strip()
         self._cfg["mic_device"] = self._mic.currentText()
         self._cfg["mic_gain"] = self._mic_gain.value()
         self._cfg["sys_audio_enabled"] = self._sys_enabled.isChecked()

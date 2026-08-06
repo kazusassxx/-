@@ -14,7 +14,7 @@ build/
 # 用户数据目录：~/.meeting-transcriber/（config.json / speakers.json / 录音 / 报告）
 .meeting-transcriber/
 # 模型文件不入库（由 scripts/download_models.py 获取）
-models/
+/models/
 *.onnx
 *.onnx.tar.bz2
 # 录音与转写输出

@@ -590,6 +590,12 @@ def test_settings_dialog_has_asr_lang_and_correction_hint(qapp, tmp_path):
         assert dlg._asr_lang.count() >= 6  # auto/zh/en/yue/ja/ko
         assert dlg._asr_lang.currentData() in ("auto", "zh")
 
+        # ASR 引擎下拉存在（auto/sensevoice/zipformer）且含双语推荐项
+        assert dlg._asr_engine.count() == 3
+        assert dlg._asr_engine.itemData(2) == "zipformer"
+        # 热词输入框存在且初始值来自 config
+        assert dlg._hotwords.text() == ""
+
         # 纠错 Tab 有格式说明（错词=正确词）
         tabs = dlg.findChild(QTabWidget)
         tabs.setCurrentIndex(2)  # 高级纠错
@@ -599,30 +605,41 @@ def test_settings_dialog_has_asr_lang_and_correction_hint(qapp, tmp_path):
         dlg.close()
 
 
-def test_settings_save_persists_asr_lang(qapp, tmp_path, monkeypatch):
-    """保存设置：asr_lang 选择写回 config（识别语言持久化）。"""
+def test_settings_save_persists_asr_settings(qapp, tmp_path, monkeypatch):
+    """保存设置：asr_lang / asr_engine / hotwords 全部写回 config。
+
+    WHY：三项 ASR 参数（语言、引擎、热词）都是用户可见的准确率配置，
+    保存不写回 = 重启后设置丢失，功能失效。
+    """
     monkeypatch.setenv("MEETING_TRANSCRIBER_HOME", str(tmp_path))  # 防写真实配置
     from meeting_transcriber.gui.windows.settings_dialog import SettingsDialog
     from meeting_transcriber.storage.speakers import SpeakerDB
 
     cfg = _make_config(tmp_path)
     cfg["asr_lang"] = "auto"
+    cfg["asr_engine"] = "auto"
+    cfg["hotwords"] = ""
     dlg = SettingsDialog(cfg, SpeakerDB(tmp_path / "speakers.json"))
     try:
         idx = dlg._asr_lang.findData("zh")
         dlg._asr_lang.setCurrentIndex(idx)
-        assert dlg._asr_lang.currentData() == "zh"
+        idx = dlg._asr_engine.findData("zipformer")
+        dlg._asr_engine.setCurrentIndex(idx)
+        dlg._hotwords.setText("API,Transformer")
         dlg._on_save()
     finally:
         dlg.close()
-    assert cfg["asr_lang"] == "zh"  # 保存后写回 config
+    assert cfg["asr_lang"] == "zh"
+    assert cfg["asr_engine"] == "zipformer"
+    assert cfg["hotwords"] == "API,Transformer"
 
 
-def test_setting_asr_lang_change_reloads_models(qapp, tmp_path, monkeypatch):
-    """识别语言变更 → 模型重载（SenseVoice 语言在加载时固定，必须重载生效）。
+def test_setting_asr_changes_reload_models(qapp, tmp_path, monkeypatch):
+    """识别语言 / ASR 引擎 / 热词任一变更 → 模型重载。
 
-    WHY：直接改 config 不重载，SenseVoice 仍按旧语言解码，用户改语言无效果
-    = 功能失效。此测试锁定「语言变更触发 load_async」契约。
+    WHY：这三项参数都在模型加载时固定（SenseVoice 语言、zipformer 热词
+    modified_beam_search 解码），直接改 config 不重载 = 新设置无效，
+    功能失效。此测试锁定「变更触发 set_* + load_async」契约。
     """
     from meeting_transcriber.gui.windows import main_window as mw_mod
     from meeting_transcriber.gui.windows.main_window import MainWindow
@@ -632,6 +649,8 @@ def test_setting_asr_lang_change_reloads_models(qapp, tmp_path, monkeypatch):
         status = "ready"
         error = None
         langs: list[str] = []
+        engines: list[str] = []
+        hotwords: list[str] = []
 
         def load_async(self, progress_cb=None) -> None:
             pass
@@ -639,9 +658,17 @@ def test_setting_asr_lang_change_reloads_models(qapp, tmp_path, monkeypatch):
         def set_lang(self, lang: str) -> None:
             self.langs.append(lang)
 
+        def set_engine(self, engine: str) -> None:
+            self.engines.append(engine)
+
+        def set_hotwords(self, hotwords: str) -> None:
+            self.hotwords.append(hotwords)
+
     models = _LangModels()
     cfg = _make_config(tmp_path)
     cfg["asr_lang"] = "auto"
+    cfg["asr_engine"] = "auto"
+    cfg["hotwords"] = ""
 
     win = MainWindow(cfg, models=models, speaker_db=SpeakerDB(tmp_path / "sp.json"))
 
@@ -651,6 +678,8 @@ def test_setting_asr_lang_change_reloads_models(qapp, tmp_path, monkeypatch):
 
         def exec(self):
             cfg["asr_lang"] = "zh"  # 用户在对话框里改成了中文
+            cfg["asr_engine"] = "zipformer"
+            cfg["hotwords"] = "API,Transformer"  # 并切引擎 + 加热词
             return mw_mod.QDialog.DialogCode.Accepted
 
     try:
@@ -658,6 +687,8 @@ def test_setting_asr_lang_change_reloads_models(qapp, tmp_path, monkeypatch):
         win._open_settings()
 
         assert models.langs == ["zh"], "识别语言变更后必须 set_lang + 重载模型"
+        assert models.engines == ["zipformer"], "引擎变更后必须 set_engine + 重载"
+        assert models.hotwords == ["API,Transformer"], "热词变更后必须 set_hotwords + 重载"
     finally:
         win._model_timer.stop()
         win.close()

@@ -69,6 +69,8 @@ class MainWindow(QMainWindow):
         self._models = models or ModelManager(
             num_threads=int(self._config.get("num_threads") or 4),
             lang=str(self._config.get("asr_lang") or "auto"),
+            engine=str(self._config.get("asr_engine") or "auto"),
+            hotwords=str(self._config.get("hotwords") or ""),
         )
         self._db = speaker_db or SpeakerDB.load(paths.speakers_path())
         self._sm = StateMachine()
@@ -247,12 +249,22 @@ class MainWindow(QMainWindow):
             )
             return
         old_lang = str(self._config.get("asr_lang") or "auto")
+        old_engine = str(self._config.get("asr_engine") or "auto")
+        old_hotwords = str(self._config.get("hotwords") or "")
         dlg = SettingsDialog(self._config, self._db, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             new_lang = str(self._config.get("asr_lang") or "auto")
-            # 识别语言变更 → 重载模型使新语言生效（SenseVoice 语言在模型加载时固定）
-            if new_lang != old_lang and self._models.status in ("ready", "error"):
+            new_engine = str(self._config.get("asr_engine") or "auto")
+            new_hotwords = str(self._config.get("hotwords") or "")
+            # 识别语言 / ASR 引擎 / 热词任一变更 → 重载模型生效（参数在加载时固定）
+            changed = (
+                new_lang != old_lang or new_engine != old_engine
+                or new_hotwords != old_hotwords
+            )
+            if changed and self._models.status in ("ready", "error"):
                 self._models.set_lang(new_lang)
+                self._models.set_engine(new_engine)
+                self._models.set_hotwords(new_hotwords)
                 self._models.load_async()
 
     # ================= 模型状态（G-14）=================

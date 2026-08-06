@@ -76,7 +76,8 @@ try {
         $checks = @(
             "models\sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17\model.int8.onnx",
             "models\3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx",
-            "models\sherpa-onnx-pyannote-segmentation-3-0\model.int8.onnx"
+            "models\sherpa-onnx-pyannote-segmentation-3-0\model.int8.onnx",
+            "models\sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20\encoder-epoch-99-avg-1.int8.onnx"
         )
         $missing = $checks | Where-Object { -not (Test-Path (Join-Path $DistDir $_)) }
         if ($missing) {

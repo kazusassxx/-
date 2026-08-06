@@ -14,6 +14,8 @@ DEFAULT_CONFIG: dict = {
     "user_name": "",
     "language": "zh",
     "asr_lang": "zh",
+    "asr_engine": "auto",  # auto | sensevoice | zipformer（auto=按模型目录自动识别）
+    "hotwords": "",  # 逗号分隔热词，仅 zipformer 引擎生效
     "output_dir": str(Path.home() / "Documents" / "MeetingTranscripts"),
     "num_threads": 4,
     "mic_device": "",

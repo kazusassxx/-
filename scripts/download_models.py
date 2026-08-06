@@ -14,7 +14,7 @@ from meeting_transcriber.models import download
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="下载 meeting-transcriber 三个模型")
+    parser = argparse.ArgumentParser(description="下载 meeting-transcriber 语音识别模型")
     parser.add_argument(
         "--target",
         default=str(paths.models_dir()),
@@ -27,7 +27,7 @@ def main(argv: list[str] | None = None) -> int:
         nargs="*",
         choices=list(download.MODELS),
         default=None,
-        help="仅下载指定模型：asr / embedding / segmentation",
+        help="仅下载指定模型：asr(SenseVoice) / asr_zipformer(中英双语) / embedding / segmentation",
     )
     args = parser.parse_args(argv)
 
